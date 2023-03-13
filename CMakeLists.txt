@@ -35,13 +35,17 @@ if (GNU)
 	set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-undefined")
 endif()
 
+add_library(grace INTERFACE)
+target_include_directories(grace INTERFACE ./include/.)
+
 if (NOT TARGET ylems)
     option(YLEMS_NO_TESTS "No tests for ylems" ON)
     add_subdirectory(libraries/ylems)
+	target_link_libraries(grace INTERFACE ylems)
 endif()
 
-add_library(grace INTERFACE)
-target_include_directories(grace INTERFACE ./include/.)
+
+
 
 if(GRACE_ENABLE_TESTS)
 	add_subdirectory(tests/unit)

@@ -26,7 +26,7 @@ namespace grace
             {
                 buffer.push_back(p);
                 if(buffer.size() < 2)
-                    return false;
+                    return true;
                 return the_sink.consume(elements::Segment{buffer.back(1), buffer.back(0)});
             }
 

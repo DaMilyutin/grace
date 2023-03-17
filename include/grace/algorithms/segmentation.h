@@ -65,31 +65,29 @@ namespace grace
 
         struct Skipper: rules::Sink<Skipper>
         {
-            bool consume(Point_r const& p)
+            bool start(Point_r const& p1, Point_r const& p)
             {
-                prev = last;
-                if(!last)
-                {
-                    prev = p;
-                    last = p;
-                    return true;
-                }
+                prev = p1;
                 last = p;
-                double const dist = norm(p - *prev);
+                double const dist = norm(p - prev);
                 if(dist < length_limit)
                     return length_limit -= dist, true;
                 return false;
             }
 
-            void clear()
+            bool consume(Point_r const& p)
             {
-                prev = std::nullopt;
-                last = std::nullopt;
+                prev = last;
+                last = p;
+                double const dist = norm(p - prev);
+                if(dist < length_limit)
+                    return length_limit -= dist, true;
+                return false;
             }
 
-            std::optional<Point_r>   prev;
-            std::optional<Point_r>   last;
-            real_t                   length_limit;
+            Point_r   prev;
+            Point_r   last;
+            real_t    length_limit;
         };
     }
 }

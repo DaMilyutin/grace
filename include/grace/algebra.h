@@ -6,4 +6,6 @@
 #include "algebra/join.h"
 
 #include "algorithms/segments.h"
+#include "algorithms/segmentation.h"
+#include "algorithms/sinker.h"
 

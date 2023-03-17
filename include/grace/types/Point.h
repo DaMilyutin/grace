@@ -153,6 +153,11 @@ namespace grace
             return norm(v.x, v.y);
         }
 
+        inline real_t arg(const Vector<float>& v) // real_t
+        {
+            return atan2f(v.y, v.x);
+        }
+
         inline double norm(const Vector<double>& v)
         {
             return norm(v.x, v.y);
@@ -177,6 +182,20 @@ namespace grace
             Vector<CoordT> v = {dx, dy};
             return v;
         }
+
+        inline Point_r towards(Point_r from, Point_r const& to, real_t len)
+        {
+            auto const diff = to - from;
+            auto const dist = norm(diff);
+            constexpr real_t eps = 1.e-5f;
+            if(dist < eps)
+                return from;
+            auto const s = len/dist;
+            from.x += diff.x*s;
+            from.y += diff.y*s;
+            return from;
+        }
+
     }
 
     using namespace types;

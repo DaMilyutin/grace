@@ -12,5 +12,12 @@ namespace grace
             meld_tag<terminal>(e, s);
             return s._get_();
         }
+
+        template<typename S, typename E>
+        S&& operator<<(Sink<S>&& s, Yield<E> const& e)
+        {
+            meld_tag<terminal>(e, s);
+            return FWD(s)._get_();
+        }
     }
 }

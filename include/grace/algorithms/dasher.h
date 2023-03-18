@@ -10,7 +10,7 @@ namespace grace
 {
     namespace elements
     {
-        class Dasher: public rules::TransformOr<Dasher>
+        class Dasher: public rules::Link<Dasher>
         {
         public:
             Dasher(Dash const& d)
@@ -18,6 +18,10 @@ namespace grace
             {
                 skipper_.reset(dash_.start);
             }
+
+            template<typename Y> void begin(Y const& ) const {}
+            template<typename Y> void end(Y const&)    const {}
+
 
             template<typename S>
             bool feed(S& sink, Point_r const& p)
@@ -30,9 +34,8 @@ namespace grace
                             break;
                         Point_r const last = keeper_.path.back();
                         keeper_.path.back() = towards(keeper_.path[keeper_.path.size()-2], last, keeper_.length_limit);
-                        for(auto&& pp: keeper_.path)
-                            if(!sink.consume(pp))
-                                return false;
+                        if(!sink.consume(keeper_.path))
+                            return false;
                         next_phase();
                         skipper_.reset(dash_.pattern[phase_/2].gap_length);
                         skipper_.consume(keeper_.path.back());

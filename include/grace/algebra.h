@@ -8,4 +8,5 @@
 #include "algorithms/segments.h"
 #include "algorithms/segmentation.h"
 #include "algorithms/dasher.h"
+#include "algorithms/expanser.h"
 

@@ -26,7 +26,7 @@ namespace grace
         using TransformOr = ylems::categories::TransformOr<terminal, D>;
 
         template<typename D>
-        struct Decorator: public Transform<D> {};
+        struct Decorator: public terminal<D> {};
 
         YLEMS_MELD_OPERATION(terminal, operator/)
 

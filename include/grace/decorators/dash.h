@@ -4,30 +4,32 @@
 
 namespace grace
 {
-    class Dash: public rules::Yield<Dash>//, private vertex_sequence
+    namespace elements
     {
-    public:
-        Dash& dash_start(real_t offset)
+        class Dash
         {
-            pattern_.clear();
-            dash_start_ = offset;
-            return *this;
-        }
+        public:
+            Dash& reset(real_t offset = 0.f)
+            {
+                pattern.clear();
+                start = offset;
+                return *this;
+            }
 
-        Dash& add_dash(real_t dash_length, real_t gap_length)
-        {
-            dash_gap dg = {dash_length, gap_length};
-            pattern_.push_back(dg);
-            return *this;
-        }
+            Dash& add(real_t dash_length, real_t gap_length)
+            {
+                dash_gap dg = {dash_length, gap_length};
+                pattern.push_back(dg);
+                return *this;
+            }
 
-    private:
-        struct dash_gap
-        {
-            real_t dash_length;
-            real_t gap_length;
+            struct dash_gap
+            {
+                real_t dash_length;
+                real_t gap_length;
+            };
+            real_t                start = 0.f;
+            std::vector<dash_gap> pattern;
         };
-        real_t                dash_start_ = 0.f;
-        std::vector<dash_gap> pattern_;
-    };
+    }
 }

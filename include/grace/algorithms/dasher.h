@@ -1,0 +1,71 @@
+#pragma once
+#include <grace/algebra/rules.h>
+#include <grace/algorithms/segmentation.h>
+#include <grace/decorators/dash.h>
+
+#include <optional>
+#include <vector>
+
+namespace grace
+{
+    namespace elements
+    {
+        class Dasher: public rules::TransformOr<Dasher>
+        {
+        public:
+            Dasher(Dash const& d)
+                : dash_(d)
+            {
+                skipper_.reset(dash_.start);
+            }
+
+            template<typename S>
+            bool feed(S& sink, Point_r const& p)
+            {
+                while(true)
+                {
+                    if((phase_&1)==0)
+                    {
+                        if(keeper_.consume(p))
+                            break;
+                        Point_r const last = keeper_.path.back();
+                        keeper_.path.back() = towards(keeper_.path[keeper_.path.size()-2], last, keeper_.length_limit);
+                        for(auto&& pp: keeper_.path)
+                            if(!sink.consume(pp))
+                                return false;
+                        next_phase();
+                        skipper_.reset(dash_.pattern[phase_/2].gap_length);
+                        skipper_.consume(keeper_.path.back());
+                    }
+                    if((phase_&1)==1)
+                    {
+                        if(skipper_.consume(p))
+                            break;
+                        next_phase();
+                        keeper_.reset(dash_.pattern[phase_/2].dash_length);
+                        keeper_.consume(towards(skipper_.points.back(1), skipper_.points.back(0), skipper_.length_limit));
+                    }
+                }
+                return true;
+            }
+
+        private:
+            void next_phase() { phase_ = (phase_ + 1)%(dash_.pattern.size()*2); }
+
+            Dash          dash_;
+            int           phase_    = -1;
+            Keeper<void>  keeper_;
+            Skipper       skipper_;
+        };
+
+
+        template<typename Y>
+        auto operator/(rules::Yield<Y>&& y, Dash const& d)
+        {
+            return FWD(y)._get_()/Dasher(d);
+        }
+
+    }
+
+
+}

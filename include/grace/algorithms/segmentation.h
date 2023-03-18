@@ -67,31 +67,21 @@ namespace grace
 
         struct Skipper: rules::Sink<Skipper>
         {
-            bool start(Point_r const& p1, Point_r const& p)
-            {
-                prev = p1;
-                last = p;
-                real_t const dist = norm(p - prev);
-                if(dist < length_limit)
-                    return length_limit -= dist, true;
-                return false;
-            }
-
             bool consume(Point_r const& p)
             {
-                prev = last;
-                last = p;
-                real_t const dist = norm(p - prev);
+                points.push_back(p);
+                if(points.size() < 2)
+                    return true;
+                real_t const dist = norm(points.back() - points.back(1));
                 if(dist < length_limit)
                     return length_limit -= dist, true;
                 return false;
             }
 
-            void reset(real_t length) { length_limit = length; }
+            void reset(real_t length) { length_limit = length; points.clear(); }
 
-            Point_r   prev;
-            Point_r   last;
-            real_t    length_limit;
+            ylems::elements::CycleBuffer<Point_r, 2> points;
+            real_t                                   length_limit;
         };
     }
 }

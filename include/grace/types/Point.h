@@ -5,7 +5,7 @@
 #pragma once
 #include <agge/types/scalars.h>
 
-#include <math.h>
+#include <cmath>
 
 namespace grace
 {
@@ -16,6 +16,8 @@ namespace grace
         {
             T x;
             T y;
+
+            static auto polar(T r, T a) { return Vector<T>{r*::cos(a), r*::sin(a)}; }
         };
 
         template<typename T>
@@ -133,11 +135,6 @@ namespace grace
             return sqrtf(bx * bx + by * by);
         }
 
-        inline real_t distance(real_t ax, real_t ay, real_t bx, real_t by)
-        {
-            return norm(bx - ax, by - ay);
-        }
-
         inline double norm(double bx, double by)
         {
             return sqrt(bx * bx + by * by);
@@ -166,7 +163,7 @@ namespace grace
         template <typename CoordT>
         inline CoordT distance(const Point<CoordT>& a, const Point<CoordT>& b)
         {
-            return distance(a.x - b.x, a.y - b.y);
+            return norm(a.x - b.x, a.y - b.y);
         }
 
         template <typename CoordT>

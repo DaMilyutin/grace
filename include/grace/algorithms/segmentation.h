@@ -29,8 +29,9 @@ namespace grace
                 return false;
             }
 
-            void clear()
+            void reset(real_t length)
             {
+                length_limit = length;
                 path.clear();
                 annot.clear();
             }
@@ -54,8 +55,9 @@ namespace grace
                 return false;
             }
 
-            void clear()
+            void reset(real_t length)
             {
+                length_limit = length;
                 path.clear();
             }
 
@@ -84,6 +86,8 @@ namespace grace
                     return length_limit -= dist, true;
                 return false;
             }
+
+            void reset(real_t length) { length_limit = length; }
 
             Point_r   prev;
             Point_r   last;

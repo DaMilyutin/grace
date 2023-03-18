@@ -69,7 +69,7 @@ namespace grace
             {
                 prev = p1;
                 last = p;
-                double const dist = norm(p - prev);
+                real_t const dist = norm(p - prev);
                 if(dist < length_limit)
                     return length_limit -= dist, true;
                 return false;
@@ -79,7 +79,7 @@ namespace grace
             {
                 prev = last;
                 last = p;
-                double const dist = norm(p - prev);
+                real_t const dist = norm(p - prev);
                 if(dist < length_limit)
                     return length_limit -= dist, true;
                 return false;

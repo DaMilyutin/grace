@@ -51,7 +51,13 @@ namespace grace
                     return true;
                 real_t const distance = norm(path.back() - path[path.size()-2]);
                 if(distance < length_limit)
-                    return length_limit -= distance, true;
+                {
+                    if(distance < 1e-5f)
+                        path.pop_back();
+                    else
+                        length_limit -= distance;
+                    return true;
+                }
                 return false;
             }
 

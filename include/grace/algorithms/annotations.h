@@ -49,6 +49,8 @@ namespace grace
             United() = default;
             United(United&&) = default;
             United(United const&) = default;
+            United& operator=(United&&) = default;
+            United& operator=(United const&) = default;
 
             United(real_t d, real_t prev = 0.f): Distance(d), CurveLength(d, prev) {}
 
@@ -61,6 +63,8 @@ namespace grace
             United() = default;
             United(United&&) = default;
             United(United const&) = default;
+            United& operator=(United&&) = default;
+            United& operator=(United const&) = default;
 
             United(real_t dist, real_t dir): Distance(dist), Direction(dir) {}
             United(Vector_r const& v): United(norm(v), arg(v)) {}
@@ -72,6 +76,9 @@ namespace grace
             United() = default;
             United(United&&) = default;
             United(United const&) = default;
+            United& operator=(United&&) = default;
+            United& operator=(United const&) = default;
+
 
             United(real_t d, real_t a, real_t prev = 0.f): Distance(d), Direction(a), CurveLength(d, prev) {}
             United(Vector_r const& v, CurveLength const& prev = CurveLength()): United(norm(v), arg(v), prev.length) {}

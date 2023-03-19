@@ -28,14 +28,14 @@ namespace grace
                 for(size_t i = 1; i < p.size(); ++i)
                 {
                     dists[i-1] = distance(p[i], p[i-1]);
-                    real_t const scale = extrude_.width/dists[i-1];
+                    real_t const scale = 0.5f*extrude_.width/dists[i-1];
                     Vector_r const o{(p[i].y - p[i-1].y)*scale, -(p[i].x - p[i-1].x)*scale};
                     if(!sink.consume(p[i-1] + o) || !sink.consume(p[i] + o))
                         return false;
                 }
                 for(size_t i = p.size()-1; i > 0; --i)
                 {
-                    real_t const scale = extrude_.width/dists[i-1];
+                    real_t const scale = 0.5f*extrude_.width/dists[i-1];
                     Vector_r const o{(p[i-1].y - p[i].y)*scale, -(p[i-1].x - p[i].x)*scale};
                     if(!sink.consume(p[i] + o) || !sink.consume(p[i-1] + o))
                         return false;

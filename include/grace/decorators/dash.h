@@ -6,7 +6,7 @@ namespace grace
 {
     namespace elements
     {
-        class Dash
+        class Dash: rules::Decorator<Dash>
         {
         public:
             Dash& reset(real_t offset = 0.f)

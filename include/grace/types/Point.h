@@ -96,11 +96,29 @@ namespace grace
         }
 
         template<typename CoordT>
-        inline Vector<CoordT> dotcross(Vector<CoordT> const& lhs, const Vector<CoordT>& rhs)
+        inline CoordT dot(const Vector<CoordT>& l, const Vector<CoordT>& r)
+        {
+            return l.x*r.x + l.y*r.y;
+        }
+
+        template<typename CoordT>
+        inline CoordT dot(const Vector<CoordT>& l)
+        {
+            return l.x*l.x + l.y*l.y;
+        }
+
+        template<typename CoordT>
+        inline CoordT cross(const Vector<CoordT>& l, const Vector<CoordT>& r)
+        {
+            return l.x*r.y - l.y*r.x;
+        }
+
+        template<typename CoordT>
+        inline Vector<CoordT> dotcross(Vector<CoordT> const& l, const Vector<CoordT>& r)
         {
             Vector<CoordT> v;
-            v.x = lhs.x*rhs.x + lhs.y*rhs.y;
-            v.y = lhs.x*rhs.y - lhs.y*rhs.x;
+            v.x = l.x*r.x + l.y*r.y;
+            v.y = l.x*r.y - l.y*r.x;
             return v;
         }
 

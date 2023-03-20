@@ -15,6 +15,28 @@ namespace grace
 {
     namespace elements
     {
+        struct Joint: rules::Yield<Joint>
+        {
+            Joint(Point_r piv, real_t w, real_t d1, real_t d2, Point_r alt)
+                : pivot(piv), wid(w), dir1(d1), dir2(d2), alt(alt)
+            {}
+
+            Point_r pivot;
+            real_t  wid;
+            real_t  dir1;
+            real_t  dir2;
+            Point_r alt;
+        };
+
+        template<typename S>
+        S& operator<<(rules::Sink<S>& s, Joint const& j)
+        {
+            S& the_sink = s._get_();
+            if(j.dir2 > j.dir1)
+                return s << Arc(j.pivot, j.wid, j.dir1-M_PI_2, j.dir2 - M_PI_2);
+            s << j.alt;
+        }
+
 
         auto round_cap(Point_r const& e, real_t w, real_t dir)
         {
@@ -96,8 +118,8 @@ namespace grace
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
                 sink << round_cap(m1, extrude_.width, a1 + M_PI)
-                     << m1 + mo1 << c + co  << m2 + mo2
-                     << m2 - mo2 << c - co  << m1 - mo1;
+                     << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co) << m2 + mo2
+                     << m2 - mo2 << Joint(c, extrude_.width/2, a2 + M_PI, a1+ M_PI, c - co) << m1 - mo1;
                 sink << rules::close;
                 return true;
             }
@@ -117,9 +139,9 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                sink << m1 + mo1 << c + co  << m2 + mo2
+                sink << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co)  << m2 + mo2
                      << round_cap(m2, extrude_.width, a2)
-                     << m2 - mo2 << c - co  << m1 - mo1;
+                     << m2 - mo2 << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co) << m1 - mo1;
                 sink << rules::close;
                 return true;
             }
@@ -141,9 +163,9 @@ namespace grace
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
                 sink << round_cap(m1, extrude_.width, a1 + M_PI)
-                     << m1 + mo1 << c + co  << m2 + mo2
+                     << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co)  << m2 + mo2
                      << round_cap(m2, extrude_.width, a2)
-                     << m2 - mo2 << c - co  << m1 - mo1;
+                     << m2 - mo2 << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
                 sink << rules::close;
                 return true;
             }

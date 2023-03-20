@@ -3,14 +3,24 @@
 #include <grace/decorators/extrudes.h>
 #include <grace/decorators/joins.h>
 
+#include <grace/elements/arc.h>
+
 #include <optional>
 #include <vector>
-#include <cmath>
+
+#define _USE_MATH_DEFINES
+#include <math.h>
 
 namespace grace
 {
     namespace elements
     {
+
+        auto round_cap(Point_r const& e, real_t w, real_t dir)
+        {
+            return Arc(e, 0.5f*w, dir - M_PI_2, dir + M_PI_2);
+        }
+
         class Expanser: public rules::Link<Expanser>
         {
             using Annot = grace::annotations::United_DD;
@@ -85,10 +95,11 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                bool const fed = sink.consume(m1 + mo1) && sink.consume(c + co) && sink.consume(m2 + mo2)
-                    && sink.consume(m2 - mo2) && sink.consume(c - co) && sink.consume(m1 - mo1);
+                sink << round_cap(m1, extrude_.width, a1 + M_PI)
+                     << m1 + mo1 << c + co  << m2 + mo2
+                     << m2 - mo2 << c - co  << m1 - mo1;
                 sink << rules::close;
-                return fed;
+                return true;
             }
 
             template<typename S>
@@ -106,10 +117,11 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                bool const fed = sink.consume(m1 + mo1) && sink.consume(c + co) && sink.consume(m2 + mo2)
-                    && sink.consume(m2 - mo2) && sink.consume(c - co) && sink.consume(m1 - mo1);
+                sink << m1 + mo1 << c + co  << m2 + mo2
+                     << round_cap(m2, extrude_.width, a2)
+                     << m2 - mo2 << c - co  << m1 - mo1;
                 sink << rules::close;
-                return fed;
+                return true;
             }
 
             template<typename S>
@@ -128,10 +140,12 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                bool const fed = sink.consume(m1 + mo1) && sink.consume(c + co) && sink.consume(m2 + mo2)
-                    && sink.consume(m2 - mo2) && sink.consume(c - co) && sink.consume(m1 - mo1);
+                sink << round_cap(m1, extrude_.width, a1 + M_PI)
+                     << m1 + mo1 << c + co  << m2 + mo2
+                     << round_cap(m2, extrude_.width, a2)
+                     << m2 - mo2 << c - co  << m1 - mo1;
                 sink << rules::close;
-                return fed;
+                return true;
             }
 
             template<typename S>
@@ -142,10 +156,12 @@ namespace grace
                 auto const& m2 = b.point.back(0);
                 Vector_r const o = Vector_r::polar(extrude_.width*0.5f, a - agge::pi*0.5f);
                 sink << rules::start;
-                bool const fed = sink.consume(m1 + o) && sink.consume(m2 + o)
-                              && sink.consume(m2 - o) && sink.consume(m1 - o);
+                sink << round_cap(m1, extrude_.width, a + M_PI)
+                     << m1 + o << m2 + o
+                     << round_cap(m2, extrude_.width, a)
+                     << m2 - o << m1 - o;
                 sink << rules::close;
-                return fed;
+                return true;
             }
 
 
@@ -162,10 +178,10 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                bool const fed = sink.consume(m1 + mo1) && sink.consume(c + co) && sink.consume(m2 + mo2)
-                              && sink.consume(m2 - mo2) && sink.consume(c - co) && sink.consume(m1 - mo1);
+                sink << m1 + mo1 << c + co  << m2 + mo2
+                     << m2 - mo2 << c - co  << m1 - mo1;
                 sink << rules::close;
-                return fed;
+                return true;
             }
 
         public:

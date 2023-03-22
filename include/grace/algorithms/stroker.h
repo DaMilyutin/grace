@@ -1,86 +1,11 @@
 #pragma once
 #include <grace/algebra/rules.h>
-#include <grace/decorators/extrudes.h>
-#include <grace/decorators/joins.h>
-
-#include <grace/elements/arc.h>
-
-#include <optional>
-#include <vector>
-
-#define _USE_MATH_DEFINES
-#include <math.h>
-#include <functional>
+#include <grace/decorators/stroke.h>
 
 namespace grace
 {
     namespace elements
     {
-        namespace joints
-        {
-            std::vector<Point_r> const& round(std::vector<Point_r>& buf, Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
-            {
-                buf.clear();
-                if(dir2 > dir1)
-                    push_back(buf) << Arc(cen, hw, dir1-M_PI_2, dir2 - M_PI_2);
-                else
-                    buf.push_back(miter);
-                return buf;
-            }
-
-            std::vector<Point_r> const& miter(std::vector<Point_r>& buf, Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& m)
-            {
-                buf.clear();
-                buf.push_back(m);
-                return buf;
-            }
-        }
-
-        namespace caps
-        {
-            inline std::vector<Point_r>& bevel(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
-            {
-                buf.clear();
-                Vector_r const v = Vector_r::polar(hw, dir + M_PI_2);
-                buf.push_back(e - v);
-                buf.push_back(e + v);
-                return buf;
-            }
-
-            inline std::vector<Point_r>& round(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
-            {
-                buf.clear();
-                push_back(buf) << Arc(e, hw, dir - M_PI_2, dir + M_PI_2);
-                return buf;
-            }
-
-            struct Polygonal
-            {
-                int const sides = 2;
-
-                inline std::vector<Point_r>& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
-                {
-                    buf.clear();
-                    push_back(buf) << Arc(sides, e, hw, dir - M_PI_2, dir + M_PI_2);
-                    return buf;
-                }
-            };
-
-            struct PolygonalKnob
-            {
-                int    const sides = 5;
-
-                inline std::vector<Point_r>& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
-                {
-                    buf.clear();
-                    real_t spread = M_PI*(1. - 1./sides);
-                    real_t r = hw/sin(spread);
-                    push_back(buf) << Arc(sides, e, r, dir - spread, dir + spread);
-                    return buf;
-                }
-            };
-        }
-
         class Stroker: public rules::Link<Stroker>
         {
             using Annot = grace::annotations::United_DD;
@@ -148,7 +73,7 @@ namespace grace
             {
                 if(a >  2*M_PI) a -= 2*M_PI;
                 if(a < -2*M_PI) a += 2*M_PI;
-                return fabs(halfWidth_*tan(a));
+                return fabs(opt_.halfWidth_*tan(a));
             }
 
             template<typename S>
@@ -163,12 +88,13 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
-                Vector_r const mo2 = Vector_r::polar(halfWidth_, a2 - M_PI_2);
+                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(opt_.halfWidth_, a2 - M_PI_2);
                 sink << rules::start;
-                sink << cap(m1, halfWidth_, a1 + M_PI)
-                     << joint(c, halfWidth_, a1, a2, c + co) << m2 + mo2
-                     << m2 - mo2 << joint(c, halfWidth_, a2 + M_PI, a1 + M_PI, c - co);
+                sink << make_cap(m1, opt_.halfWidth_, a1 + M_PI)
+                     << make_join(c, opt_.halfWidth_, a1, a2, c + co)
+                     << m2 + mo2 << m2 - mo2
+                     << make_join(c, opt_.halfWidth_, a2 + M_PI, a1 + M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -185,11 +111,11 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
-                Vector_r const mo1 = Vector_r::polar(halfWidth_, a1 - M_PI_2);
+                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(opt_.halfWidth_, a1 - M_PI_2);
                 sink << rules::start;
-                sink << m1 - mo1 << m1 + mo1 << joint(c, halfWidth_, a1, a2, c + co)
-                     << cap(m2, halfWidth_, a2) << joint(c, halfWidth_, a2+M_PI, a1+M_PI, c - co);
+                sink << m1 - mo1 << m1 + mo1 << make_join(c, opt_.halfWidth_, a1, a2, c + co)
+                     << make_cap(m2, opt_.halfWidth_, a2) << make_join(c, opt_.halfWidth_, a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -208,10 +134,10 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
                 sink << rules::start;
-                sink << cap(m1, halfWidth_, a1 + M_PI) << joint(c, halfWidth_, a1, a2, c + co)
-                     << cap(m2, halfWidth_, a2) << joint(c, halfWidth_, a2+M_PI, a1+M_PI, c - co);
+                sink << make_cap(m1, opt_.halfWidth_, a1 + M_PI) << make_join(c, opt_.halfWidth_, a1, a2, c + co)
+                     << make_cap(m2, opt_.halfWidth_, a2) << make_join(c, opt_.halfWidth_, a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -223,8 +149,8 @@ namespace grace
                 auto const& m1 = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 sink << rules::start;
-                sink << cap(m1, halfWidth_, a + M_PI)
-                     << cap(m2, halfWidth_, a);
+                sink << make_cap(m1, opt_.halfWidth_, a + M_PI)
+                     << make_cap(m2, opt_.halfWidth_, a);
                 sink << rules::close;
                 return true;
             }
@@ -239,19 +165,29 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
-                Vector_r const mo1 = Vector_r::polar(halfWidth_, a1 - M_PI_2);
-                Vector_r const mo2 = Vector_r::polar(halfWidth_, a2 - M_PI_2);
+                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(opt_.halfWidth_, a1 - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(opt_.halfWidth_, a2 - M_PI_2);
                 sink << rules::start;
-                sink << m1 + mo1 << joint(c, halfWidth_, a1, a2, c + co)  << m2 + mo2
-                     << m2 - mo2 << joint(c, halfWidth_, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
+                sink << m1 + mo1 << make_join(c, opt_.halfWidth_, a1, a2, c + co)  << m2 + mo2
+                     << m2 - mo2 << make_join(c, opt_.halfWidth_, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
                 sink << rules::close;
                 return true;
             }
 
         public:
+            Stroker() = default;
+
             Stroker(real_t width)
-                : halfWidth_(width*0.5f)
+                : opt_(width*0.5f)
+            {}
+
+            Stroker(decorators::Stroke const& rhs)
+                : opt_(rhs)
+            {}
+
+            Stroker(decorators::Stroke&& rhs)
+                : opt_(rhs)
             {}
 
             template<typename S>
@@ -306,39 +242,57 @@ namespace grace
                 return true;
             }
 
-            template<typename F>
-            Stroker& with_cap(F&& f)
+
+            // for case we want to reuse buffers
+            Stroker& width(real_t w)
             {
-                cap_ = FWD(f);
+                opt_.halfWidth_ = w/2;
                 return *this;
             }
 
             template<typename F>
-            Stroker& with_joint(F&& f)
+            Stroker& cap(F&& f)
             {
-                joint_ = FWD(f);
+                opt_.cap_ = FWD(f);
                 return *this;
             }
 
-            using cap_func_t  = std::vector<Point_r> const& (std::vector<Point_r>& buf, Point_r const& endp, real_t hw, real_t dir);
-            using join_func_t = std::vector<Point_r> const& (std::vector<Point_r>& buf, Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter);
+            template<typename F>
+            Stroker& join(F&& f)
+            {
+                opt_.join_ = FWD(f);
+                return *this;
+            }
+
         private:
-            std::vector<Point_r> const& cap(Point_r const& endp, real_t hw, real_t dir)
+            std::vector<Point_r> const& make_cap(Point_r const& endp, real_t hw, real_t dir)
             {
-                return cap_(buffer_, endp, hw, dir);
+                return opt_.cap_(buffer_, endp, hw, dir);
             }
 
-            std::vector<Point_r> const& joint(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            std::vector<Point_r> const& make_join(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
             {
-                return joint_(buffer_, cen, hw, dir1, dir2, miter);
+                return opt_.join_(buffer_, cen, hw, dir1, dir2, miter);
             }
 
-            std::function<cap_func_t>  cap_ = caps::Polygonal{4};
-            std::function<join_func_t> joint_ = joints::miter;
+            decorators::Stroke         opt_;
             std::vector<Point_r>       buffer_;
-            real_t                     halfWidth_;
         };
+    }
 
+    namespace decorators
+    {
+        template<typename Y>
+        auto operator/(rules::Yield<Y>&& y, Stroke const& s)
+        {
+            return FWD(y)._get_()/elements::Stroker(s);
+        }
+
+        template<typename Y>
+        auto operator/(rules::Yield<Y>&& y, Stroke&& s)
+        {
+            return FWD(y)._get_()/elements::Stroker(std::move(s));
+        }
     }
 
 

@@ -75,9 +75,8 @@ namespace grace
                     buf.clear();
                     real_t spread = M_PI*(1. - 1./sides);
                     real_t r = hw/sin(spread);
-                    real_t extra = r*cos(spread);
-                    Point_r c = e + Vector_r::polar(r*cos(spread), dir);
-                    push_back(buf) << Arc(sides, c, hw, dir - spread, dir + spread);
+                    Point_r c = e + Vector_r::polar(-r*cos(spread), dir);
+                    push_back(buf) << Arc(sides, c, r, dir - spread, dir + spread);
                     return buf;
                 }
             };

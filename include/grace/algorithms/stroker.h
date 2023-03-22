@@ -120,10 +120,10 @@ namespace grace
             static real_t diff_angle(real_t a2, real_t a1)
             {
                 real_t d = a2 - a1;
-                if(d > 2*agge::pi)
-                    d -= 2*agge::pi;
-                if(d < -2*agge::pi)
-                    d += 2*agge::pi;
+                if(d > 2*M_PI)
+                    d -= 2*M_PI;
+                if(d < -2*M_PI)
+                    d += 2*M_PI;
                 return d;
             }
 
@@ -150,7 +150,7 @@ namespace grace
             {
                 if(a >  2*M_PI) a -= 2*M_PI;
                 if(a < -2*M_PI) a += 2*M_PI;
-                return fabs(0.5f*extrude_.width*tan(a));
+                return fabs(halfWidth_*tan(a));
             }
 
             template<typename S>
@@ -165,12 +165,12 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
-                Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
+                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(halfWidth_, a2 - M_PI_2);
                 sink << rules::start;
-                sink << cap(m1, extrude_.width/2, a1 + M_PI)
-                     << joint(c, extrude_.width/2, a1, a2, c + co) << m2 + mo2
-                     << m2 - mo2 << joint(c, extrude_.width/2, a2 + M_PI, a1+ M_PI, c - co);
+                sink << cap(m1, halfWidth_, a1 + M_PI)
+                     << joint(c, halfWidth_, a1, a2, c + co) << m2 + mo2
+                     << m2 - mo2 << joint(c, halfWidth_, a2 + M_PI, a1 + M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -187,11 +187,11 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
-                Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
+                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(halfWidth_, a1 - M_PI_2);
                 sink << rules::start;
-                sink << cap(m2, extrude_.width/2, a2) << joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)
-                     << m1 - mo1 << m1 + mo1 << joint(c, extrude_.width/2, a1, a2, c + co);
+                sink << m1 - mo1 << m1 + mo1 << joint(c, halfWidth_, a1, a2, c + co)
+                     << cap(m2, halfWidth_, a2) << joint(c, halfWidth_, a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -210,10 +210,10 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
+                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
                 sink << rules::start;
-                sink << cap(m1, extrude_.width/2, a1 + M_PI) << joint(c, extrude_.width/2, a1, a2, c + co)
-                     << cap(m2, extrude_.width/2, a2) << joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co);
+                sink << cap(m1, halfWidth_, a1 + M_PI) << joint(c, halfWidth_, a1, a2, c + co)
+                     << cap(m2, halfWidth_, a2) << joint(c, halfWidth_, a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -225,8 +225,8 @@ namespace grace
                 auto const& m1 = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 sink << rules::start;
-                sink << cap(m1, extrude_.width, a + M_PI)
-                     << cap(m2, extrude_.width, a);
+                sink << cap(m1, halfWidth_, a + M_PI)
+                     << cap(m2, halfWidth_, a);
                 sink << rules::close;
                 return true;
             }
@@ -241,24 +241,26 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
-                Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
-                Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
+                Vector_r const co = Vector_r::polar(halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(halfWidth_, a1 - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(halfWidth_, a2 - M_PI_2);
                 sink << rules::start;
-                sink << m1 + mo1 << joint(c, extrude_.width/2, a1, a2, c + co)  << m2 + mo2
-                     << m2 - mo2 << joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
+                sink << m1 + mo1 << joint(c, halfWidth_, a1, a2, c + co)  << m2 + mo2
+                     << m2 - mo2 << joint(c, halfWidth_, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
                 sink << rules::close;
                 return true;
             }
 
         public:
-            Stroker(extrudes::Ortho const& o)
-                : extrude_(o)
+            Stroker(real_t width)
+                : halfWidth_(width*0.5f)
             {}
 
             template<typename S>
             bool feed(S& sink, std::vector<Point_r> const& p)
             {
+                static int dbg = 0;
+                ++dbg;
                 if(p.size() < 2)
                     return true;
 
@@ -294,14 +296,13 @@ namespace grace
 
 
                     feed_start(sink, b);
-                    //feed_joint(sink, b);
                     auto const count = p.size() - 1;
                     while(++i < count)
                     {
                         b.push_back(p[i]);
                         feed_joint(sink, b);
                     }
-                    //feed_joint(sink, b);
+                    b.push_back(p[i]);
                     feed_end(sink, b);
                 }
                 return true;
@@ -335,9 +336,9 @@ namespace grace
             }
 
             std::function<cap_func_t>  cap_ = caps::Polygonal{4};
-            std::function<join_func_t> joint_ = joints::round;
+            std::function<join_func_t> joint_ = joints::miter;
             std::vector<Point_r>       buffer_;
-            extrudes::Ortho            extrude_;
+            real_t                     halfWidth_;
         };
 
     }

@@ -86,30 +86,41 @@ namespace grace
                 return a2;
             }
 
-            void extend(Point_r const& s, Point_r& m, Point_r& e, real_t& d, real_t const l)
+            void extend(Point_r const& s, Annot const& ann_s, Point_r& m, Point_r& e, Annot& ann_e, real_t const l)
             {
-                if(d >= l || d == 0.f)
+                if(ann_e.distance >= l || ann_e.distance == 0.f)
                     return;
-                auto const diff = (e-s)*(l/d);
-                e = s + diff;
-                m = s + 0.5f*diff;
-                d = l;
+                if(ann_e.distance < 0.5f*l)
+                {
+                    ann_e.distance = 0.f;
+                    ann_e.direction = ann_s.direction;
+                    m = e = s;
+                }
+                else
+                {
+                    auto const diff = (e-s)*(l/ann_e.distance);
+                    e = s + diff;
+                    m = s + 0.5f*diff;
+                    ann_e.distance = l;
+                }
             }
 
             real_t get_lim(real_t a) const
             {
+                if(a >  2*M_PI) a -= 2*M_PI;
+                if(a < -2*M_PI) a += 2*M_PI;
                 return fabs(0.5f*extrude_.width*tan(a));
             }
 
             template<typename S>
             bool feed_start(S& sink, Buffer& b)
             {
+                auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
+                extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
+
                 auto const a2 = b.annot.back(0).direction;
                 auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
                 auto const half = 0.5f*(a2 - a1);
-                auto const lim = get_lim(half);
-                extend(b.point.back(1), b.mid.back(1), b.point.back(2), b.annot.back(1).distance, lim);
-
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
@@ -127,11 +138,12 @@ namespace grace
             template<typename S>
             bool feed_end(S& sink, Buffer& b)
             {
+                auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
+                extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
+
                 auto const a2 = b.annot.back(0).direction;
                 auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
                 auto const half = 0.5f*(a2 - a1);
-                auto const lim = get_lim(half);
-                extend(b.point.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0).distance, lim);
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
@@ -149,12 +161,20 @@ namespace grace
             template<typename S>
             bool feed_full(S& sink, Buffer& b)
             {
+                auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
+                if(b.annot.back(1).distance < b.annot.back(0).distance)
+                {
+                    extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
+                    extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
+                }
+                else
+                {
+                    extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
+                    extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
+                }
                 auto const a2 = b.annot.back(0).direction;
                 auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
                 auto const half = 0.5f*(a2 - a1);
-                auto const lim = get_lim(half);
-                extend(b.point.back(1), b.mid.back(1), b.point.back(2), b.annot.back(1).distance, lim);
-                extend(b.point.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0).distance, lim);
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);

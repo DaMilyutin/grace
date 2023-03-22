@@ -17,7 +17,7 @@ namespace grace
                 return acosf(2.0f*x*x  - 1);
             }
         public:
-            static constexpr real_t default_error = 1.0f;
+            static constexpr real_t default_error = 5.0f;
 
             struct Natural
             {
@@ -36,6 +36,8 @@ namespace grace
                 real_t const angle = natural.angle2 - natural.angle1;
                 real_t const granularity = optimal_step(radius, error);
                 count_ = count_t(fabsf(angle*radius)/granularity);
+                if(count_ < 1)
+                    count_ = 1;
             }
 
             Arc(count_t count, Point_r cen, real_t radius, real_t a1, real_t a2)

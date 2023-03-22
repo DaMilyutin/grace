@@ -125,12 +125,11 @@ namespace grace
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
                 Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
-                Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
                 sink << round_cap(m1, extrude_.width, a1 + M_PI)
-                     << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co) << m2 + mo2
-                     << m2 - mo2 << Joint(c, extrude_.width/2, a2 + M_PI, a1+ M_PI, c - co) << m1 - mo1;
+                     << Joint(c, extrude_.width/2, a1, a2, c + co) << m2 + mo2
+                     << m2 - mo2 << Joint(c, extrude_.width/2, a2 + M_PI, a1+ M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -149,11 +148,9 @@ namespace grace
                 auto const& m2 = b.point.back(0);
                 Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
-                Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                sink << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co)  << m2 + mo2
-                     << round_cap(m2, extrude_.width, a2)
-                     << m2 - mo2 << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co) << m1 - mo1;
+                sink << round_cap(m2, extrude_.width, a2) << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)
+                     << m1 - mo1 << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co);
                 sink << rules::close;
                 return true;
             }
@@ -163,15 +160,9 @@ namespace grace
             {
                 auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
                 if(b.annot.back(1).distance < b.annot.back(0).distance)
-                {
                     extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
-                    extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
-                }
                 else
-                {
                     extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
-                    extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
-                }
                 auto const a2 = b.annot.back(0).direction;
                 auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
                 auto const half = 0.5f*(a2 - a1);
@@ -179,13 +170,9 @@ namespace grace
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
-                Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
-                Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                sink << round_cap(m1, extrude_.width, a1 + M_PI)
-                     << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co)  << m2 + mo2
-                     << round_cap(m2, extrude_.width, a2)
-                     << m2 - mo2 << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
+                sink << round_cap(m1, extrude_.width, a1 + M_PI) << Joint(c, extrude_.width/2, a1, a2, c + co)
+                     << round_cap(m2, extrude_.width, a2) << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }

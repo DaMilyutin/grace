@@ -10,40 +10,80 @@
 
 #define _USE_MATH_DEFINES
 #include <math.h>
+#include <functional>
 
 namespace grace
 {
     namespace elements
     {
-        struct Joint: rules::Yield<Joint>
+        namespace joints
         {
-            Joint(Point_r piv, real_t w, real_t d1, real_t d2, Point_r alt)
-                : pivot(piv), wid(w), dir1(d1), dir2(d2), alt(alt)
-            {}
+            std::vector<Point_r> const& round(std::vector<Point_r>& buf, Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            {
+                buf.clear();
+                if(dir2 > dir1)
+                    push_back(buf) << Arc(cen, hw, dir1-M_PI_2, dir2 - M_PI_2);
+                else
+                    buf.push_back(miter);
+                return buf;
+            }
 
-            Point_r pivot;
-            real_t  wid;
-            real_t  dir1;
-            real_t  dir2;
-            Point_r alt;
-        };
-
-        template<typename S>
-        S& operator<<(rules::Sink<S>& s, Joint const& j)
-        {
-            S& the_sink = s._get_();
-            if(j.dir2 > j.dir1)
-                return s << Arc(j.pivot, j.wid, j.dir1-M_PI_2, j.dir2 - M_PI_2);
-            s << j.alt;
+            std::vector<Point_r> const& miter(std::vector<Point_r>& buf, Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& m)
+            {
+                buf.clear();
+                buf.push_back(m);
+                return buf;
+            }
         }
 
-
-        auto round_cap(Point_r const& e, real_t w, real_t dir)
+        namespace caps
         {
-            return Arc(e, 0.5f*w, dir - M_PI_2, dir + M_PI_2);
+            inline std::vector<Point_r>& bevel(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+            {
+                buf.clear();
+                Vector_r const v = Vector_r::polar(hw, dir + M_PI_2);
+                buf.push_back(e - v);
+                buf.push_back(e + v);
+                return buf;
+            }
+
+            inline std::vector<Point_r>& round(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+            {
+                buf.clear();
+                push_back(buf) << Arc(e, hw, dir - M_PI_2, dir + M_PI_2);
+                return buf;
+            }
+
+            struct Polygonal
+            {
+                int const sides = 2;
+
+                inline std::vector<Point_r>& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+                {
+                    buf.clear();
+                    push_back(buf) << Arc(sides, e, hw, dir - M_PI_2, dir + M_PI_2);
+                    return buf;
+                }
+            };
+
+            struct PolygonalKnob
+            {
+                int    const sides = 5;
+
+                inline std::vector<Point_r>& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+                {
+                    buf.clear();
+                    real_t spread = M_PI*(1. - 1./sides);
+                    real_t r = hw/sin(spread);
+                    real_t extra = r*cos(spread);
+                    Point_r c = e + Vector_r::polar(r*cos(spread), dir);
+                    push_back(buf) << Arc(sides, c, hw, dir - spread, dir + spread);
+                    return buf;
+                }
+            };
         }
 
-        class Expanser: public rules::Link<Expanser>
+        class Stroker: public rules::Link<Stroker>
         {
             using Annot = grace::annotations::United_DD;
 
@@ -77,13 +117,14 @@ namespace grace
                 ylems::elements::CycleBuffer<Point_r, 3>  point;
             };
 
-            static real_t adjust_angle(real_t a2, real_t a1)
+            static real_t diff_angle(real_t a2, real_t a1)
             {
-                if(a2 - a1 > 2*agge::pi)
-                    a2 -= 2*agge::pi;
-                if(a2 - a1 < -2*agge::pi)
-                    a2 += 2*agge::pi;
-                return a2;
+                real_t d = a2 - a1;
+                if(d > 2*agge::pi)
+                    d -= 2*agge::pi;
+                if(d < -2*agge::pi)
+                    d += 2*agge::pi;
+                return d;
             }
 
             void extend(Point_r const& s, Annot const& ann_s, Point_r& m, Point_r& e, Annot& ann_e, real_t const l)
@@ -119,17 +160,17 @@ namespace grace
                 extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
 
                 auto const a2 = b.annot.back(0).direction;
-                auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
-                auto const half = 0.5f*(a2 - a1);
+                auto const a1 = b.annot.back(1).direction;
+                auto const half = 0.5f*diff_angle(a2, a1);
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
                 Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                sink << round_cap(m1, extrude_.width, a1 + M_PI)
-                     << Joint(c, extrude_.width/2, a1, a2, c + co) << m2 + mo2
-                     << m2 - mo2 << Joint(c, extrude_.width/2, a2 + M_PI, a1+ M_PI, c - co);
+                sink << cap(m1, extrude_.width/2, a1 + M_PI)
+                     << joint(c, extrude_.width/2, a1, a2, c + co) << m2 + mo2
+                     << m2 - mo2 << joint(c, extrude_.width/2, a2 + M_PI, a1+ M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -141,16 +182,16 @@ namespace grace
                 extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
 
                 auto const a2 = b.annot.back(0).direction;
-                auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
-                auto const half = 0.5f*(a2 - a1);
+                auto const a1 = b.annot.back(1).direction;
+                auto const half = 0.5f*diff_angle(a2, a1);
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 sink << rules::start;
-                sink << round_cap(m2, extrude_.width, a2) << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)
-                     << m1 - mo1 << m1 + mo1 << Joint(c, extrude_.width/2, a1, a2, c + co);
+                sink << cap(m2, extrude_.width/2, a2) << joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)
+                     << m1 - mo1 << m1 + mo1 << joint(c, extrude_.width/2, a1, a2, c + co);
                 sink << rules::close;
                 return true;
             }
@@ -164,15 +205,15 @@ namespace grace
                 else
                     extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
                 auto const a2 = b.annot.back(0).direction;
-                auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
-                auto const half = 0.5f*(a2 - a1);
+                auto const a1 = b.annot.back(1).direction;
+                auto const half = 0.5f*diff_angle(a2, a1);
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 Vector_r const co = Vector_r::polar(extrude_.width/(2.f*cosf(half)), a1 + half - agge::pi*0.5f);
                 sink << rules::start;
-                sink << round_cap(m1, extrude_.width, a1 + M_PI) << Joint(c, extrude_.width/2, a1, a2, c + co)
-                     << round_cap(m2, extrude_.width, a2) << Joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co);
+                sink << cap(m1, extrude_.width/2, a1 + M_PI) << joint(c, extrude_.width/2, a1, a2, c + co)
+                     << cap(m2, extrude_.width/2, a2) << joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -183,22 +224,19 @@ namespace grace
                 auto const a = b.annot.back(0).direction;
                 auto const& m1 = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const o = Vector_r::polar(extrude_.width*0.5f, a - agge::pi*0.5f);
                 sink << rules::start;
-                sink << round_cap(m1, extrude_.width, a + M_PI)
-                     << m1 + o << m2 + o
-                     << round_cap(m2, extrude_.width, a)
-                     << m2 - o << m1 - o;
+                sink << cap(m1, extrude_.width, a + M_PI)
+                     << cap(m2, extrude_.width, a);
                 sink << rules::close;
                 return true;
             }
 
 
             template<typename S>
-            bool feed_joint(S& sink, Buffer const& b) const
+            bool feed_joint(S& sink, Buffer const& b)
             {
                 auto const a2 = b.annot.back(0).direction;
-                auto const a1 = adjust_angle(b.annot.back(1).direction, a2);
+                auto const a1 = b.annot.back(1).direction;
                 auto const half = 0.5f*(a2 - a1);
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
@@ -207,14 +245,14 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(extrude_.width*0.5f, a1 - agge::pi*0.5f);
                 Vector_r const mo2 = Vector_r::polar(extrude_.width*0.5f, a2 - agge::pi*0.5f);
                 sink << rules::start;
-                sink << m1 + mo1 << c + co  << m2 + mo2
-                     << m2 - mo2 << c - co  << m1 - mo1;
+                sink << m1 + mo1 << joint(c, extrude_.width/2, a1, a2, c + co)  << m2 + mo2
+                     << m2 - mo2 << joint(c, extrude_.width/2, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
                 sink << rules::close;
                 return true;
             }
 
         public:
-            Expanser(extrudes::Ortho const& o)
+            Stroker(extrudes::Ortho const& o)
                 : extrude_(o)
             {}
 
@@ -269,8 +307,37 @@ namespace grace
                 return true;
             }
 
+            template<typename F>
+            Stroker& with_cap(F&& f)
+            {
+                cap_ = FWD(f);
+                return *this;
+            }
+
+            template<typename F>
+            Stroker& with_joint(F&& f)
+            {
+                joint_ = FWD(f);
+                return *this;
+            }
+
+            using cap_func_t  = std::vector<Point_r> const& (std::vector<Point_r>& buf, Point_r const& endp, real_t hw, real_t dir);
+            using join_func_t = std::vector<Point_r> const& (std::vector<Point_r>& buf, Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter);
         private:
-            extrudes::Ortho extrude_;
+            std::vector<Point_r> const& cap(Point_r const& endp, real_t hw, real_t dir)
+            {
+                return cap_(buffer_, endp, hw, dir);
+            }
+
+            std::vector<Point_r> const& joint(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            {
+                return joint_(buffer_, cen, hw, dir1, dir2, miter);
+            }
+
+            std::function<cap_func_t>  cap_ = caps::Polygonal{4};
+            std::function<join_func_t> joint_ = joints::round;
+            std::vector<Point_r>       buffer_;
+            extrudes::Ortho            extrude_;
         };
 
     }

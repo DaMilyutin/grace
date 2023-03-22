@@ -4,7 +4,7 @@
 
 namespace grace
 {
-    namespace elements
+    namespace decorators
     {
         class Dash: rules::Decorator<Dash>
         {

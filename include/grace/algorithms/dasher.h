@@ -13,7 +13,7 @@ namespace grace
         class Dasher: public rules::Link<Dasher>
         {
         public:
-            Dasher(Dash const& d)
+            Dasher(decorators::Dash const& d)
                 : dash_(d)
             {
                 skipper_.reset(dash_.start);
@@ -55,20 +55,21 @@ namespace grace
         private:
             void next_phase() { phase_ = (phase_ + 1)%(dash_.pattern.size()*2); }
 
-            Dash          dash_;
-            int           phase_    = -1;
-            Keeper<void>  keeper_;
-            Skipper       skipper_;
+            decorators::Dash dash_;
+            int              phase_    = -1;
+            Keeper<void>     keeper_;
+            Skipper          skipper_;
         };
+    }
 
 
+    namespace decorators
+    {
         template<typename Y>
         auto operator/(rules::Yield<Y>&& y, Dash const& d)
         {
-            return FWD(y)._get_()/Dasher(d);
+            return FWD(y)._get_()/elements::Dasher(d);
         }
-
     }
-
 
 }

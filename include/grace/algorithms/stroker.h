@@ -22,14 +22,14 @@ namespace grace
                 return stroke.cap_(buffer, endp, hw, dir);
             }
 
-            std::vector<Point_r> const& left(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            std::vector<Point_r> const& left(Point_r const& cen, real_t hw, real_t dir1, real_t dir2)
             {
-                return stroke.join_(buffer, cen, hw, dir1, dir2, miter);
+                return stroke.join_(buffer, cen, hw, dir1, dir2);
             }
 
-            std::vector<Point_r> const& right(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            std::vector<Point_r> const& right(Point_r const& cen, real_t hw, real_t dir1, real_t dir2)
             {
-                return stroke.join_(buffer, cen, hw, dir1, dir2, miter);
+                return stroke.join_(buffer, cen, hw, dir1, dir2);
             }
 
             decorators::Stroke   stroke;
@@ -49,14 +49,14 @@ namespace grace
                 return stroke.tail_(buffer, endp, hw, dir);
             }
 
-            std::vector<Point_r> const& left(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            std::vector<Point_r> const& left(Point_r const& cen, real_t hw, real_t dir1, real_t dir2)
             {
-                return stroke.left_(buffer, cen, hw, dir1, dir2, miter);
+                return stroke.left_(buffer, cen, hw, dir1, dir2);
             }
 
-            std::vector<Point_r> const& right(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            std::vector<Point_r> const& right(Point_r const& cen, real_t hw, real_t dir1, real_t dir2)
             {
-                return stroke.right_(buffer, cen, hw, dir1, dir2, miter);
+                return stroke.right_(buffer, cen, hw, dir1, dir2);
             }
 
             decorators::FancyStroke   stroke;
@@ -152,17 +152,15 @@ namespace grace
 
                 auto const a1 = b.annot.back(1).direction;
                 auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
-                auto const half = 0.5f*(a2 - a1);
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
                 Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
                 sink << rules::start;
                 sink << make.tail(m1, halfWidth(), a1 + M_PI)
-                     << make.left(c, halfWidth(), a1, a2, c + co)
+                     << make.left(c, halfWidth(), a1, a2)
                      << m2 + mo2 << m2 - mo2
-                     << make.right(c, halfWidth(), a2 + M_PI, a1 + M_PI, c - co);
+                     << make.right(c, halfWidth(), a2 + M_PI, a1 + M_PI);
                 sink << rules::close;
                 return true;
             }
@@ -175,16 +173,14 @@ namespace grace
 
                 auto const a1 = b.annot.back(1).direction;
                 auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
-                auto const half = 0.5f*(a2 - a1);
 
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
                 Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
                 sink << rules::start;
-                sink << m1 - mo1 << m1 + mo1 << make.left(c, halfWidth(), a1, a2, c + co)
-                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co);
+                sink << m1 - mo1 << m1 + mo1 << make.left(c, halfWidth(), a1, a2)
+                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI);
                 sink << rules::close;
                 return true;
             }
@@ -199,15 +195,13 @@ namespace grace
                     extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
                 auto const a1 = b.annot.back(1).direction;
                 auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
-                auto const half = 0.5f*(a2 - a1);
 
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
                 sink << rules::start;
-                sink << make.tail(m1, halfWidth(), a1 + M_PI) << make.left(c, halfWidth(), a1, a2, c + co)
-                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co);
+                sink << make.tail(m1, halfWidth(), a1 + M_PI) << make.left(c, halfWidth(), a1, a2)
+                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI);
                 sink << rules::close;
                 return true;
             }
@@ -231,19 +225,17 @@ namespace grace
             {
                 auto const a1 = b.annot.back(1).direction;
                 auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
-                auto const half = 0.5f*(a2 - a1);
 
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
                 Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
                 Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
                 sink << rules::start;
                 sink << m1 - mo1 << m1 + mo1;
-                sink << make.left(c, halfWidth(), a1, a2, c + co);
+                sink << make.left(c, halfWidth(), a1, a2);
                 sink << m2 + mo2 << m2 - mo2;
-                sink << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co);
+                sink << make.right(c, halfWidth(), a2+M_PI, a1+M_PI);
                 sink << rules::close;
                 return true;
             }

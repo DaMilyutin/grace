@@ -6,7 +6,65 @@ namespace grace
 {
     namespace elements
     {
-        class Stroker: public rules::Link<Stroker>
+        template<typename S>
+        struct StrokeWrapper;
+
+        template<>
+        struct StrokeWrapper<decorators::Stroke>
+        {
+            std::vector<Point_r> const& head(Point_r const& endp, real_t hw, real_t dir)
+            {
+                return stroke.cap_(buffer, endp, hw, dir);
+            }
+
+            std::vector<Point_r> const& tail(Point_r const& endp, real_t hw, real_t dir)
+            {
+                return stroke.cap_(buffer, endp, hw, dir);
+            }
+
+            std::vector<Point_r> const& left(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            {
+                return stroke.join_(buffer, cen, hw, dir1, dir2, miter);
+            }
+
+            std::vector<Point_r> const& right(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            {
+                return stroke.join_(buffer, cen, hw, dir1, dir2, miter);
+            }
+
+            decorators::Stroke   stroke;
+            std::vector<Point_r> buffer;
+        };
+
+        template<>
+        struct StrokeWrapper<decorators::FancyStroke>
+        {
+            std::vector<Point_r> const& head(Point_r const& endp, real_t hw, real_t dir)
+            {
+                return stroke.head_(buffer, endp, hw, dir);
+            }
+
+            std::vector<Point_r> const& tail(Point_r const& endp, real_t hw, real_t dir)
+            {
+                return stroke.tail_(buffer, endp, hw, dir);
+            }
+
+            std::vector<Point_r> const& left(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            {
+                return stroke.left_(buffer, cen, hw, dir1, dir2, miter);
+            }
+
+            std::vector<Point_r> const& right(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
+            {
+                return stroke.right_(buffer, cen, hw, dir1, dir2, miter);
+            }
+
+            decorators::FancyStroke   stroke;
+            std::vector<Point_r>      buffer;
+        };
+
+        template<typename SW>
+        class Stroker: public rules::Link<Stroker<SW>>
         {
             using Annot = grace::annotations::United_DD;
 
@@ -73,7 +131,7 @@ namespace grace
             {
                 if(a >  2*M_PI) a -= 2*M_PI;
                 if(a < -2*M_PI) a += 2*M_PI;
-                return fabs(opt_.halfWidth_*tan(a));
+                return fabs(halfWidth()*tan(a));
             }
 
             template<typename S>
@@ -88,13 +146,13 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
-                Vector_r const mo2 = Vector_r::polar(opt_.halfWidth_, a2 - M_PI_2);
+                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
                 sink << rules::start;
-                sink << make_cap(m1, opt_.halfWidth_, a1 + M_PI)
-                     << make_join(c, opt_.halfWidth_, a1, a2, c + co)
+                sink << make.tail(m1, halfWidth(), a1 + M_PI)
+                     << make.left(c, halfWidth(), a1, a2, c + co)
                      << m2 + mo2 << m2 - mo2
-                     << make_join(c, opt_.halfWidth_, a2 + M_PI, a1 + M_PI, c - co);
+                     << make.right(c, halfWidth(), a2 + M_PI, a1 + M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -111,11 +169,11 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
-                Vector_r const mo1 = Vector_r::polar(opt_.halfWidth_, a1 - M_PI_2);
+                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
                 sink << rules::start;
-                sink << m1 - mo1 << m1 + mo1 << make_join(c, opt_.halfWidth_, a1, a2, c + co)
-                     << make_cap(m2, opt_.halfWidth_, a2) << make_join(c, opt_.halfWidth_, a2+M_PI, a1+M_PI, c - co);
+                sink << m1 - mo1 << m1 + mo1 << make.left(c, halfWidth(), a1, a2, c + co)
+                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -134,10 +192,10 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
+                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
                 sink << rules::start;
-                sink << make_cap(m1, opt_.halfWidth_, a1 + M_PI) << make_join(c, opt_.halfWidth_, a1, a2, c + co)
-                     << make_cap(m2, opt_.halfWidth_, a2) << make_join(c, opt_.halfWidth_, a2+M_PI, a1+M_PI, c - co);
+                sink << make.tail(m1, halfWidth(), a1 + M_PI) << make.left(c, halfWidth(), a1, a2, c + co)
+                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -149,8 +207,8 @@ namespace grace
                 auto const& m1 = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 sink << rules::start;
-                sink << make_cap(m1, opt_.halfWidth_, a + M_PI)
-                     << make_cap(m2, opt_.halfWidth_, a);
+                sink << make.tail(m1, halfWidth(), a + M_PI)
+                     << make.head(m2, halfWidth(), a);
                 sink << rules::close;
                 return true;
             }
@@ -165,29 +223,23 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const co = Vector_r::polar(opt_.halfWidth_/cosf(half), a1 + half - M_PI_2);
-                Vector_r const mo1 = Vector_r::polar(opt_.halfWidth_, a1 - M_PI_2);
-                Vector_r const mo2 = Vector_r::polar(opt_.halfWidth_, a2 - M_PI_2);
+                Vector_r const co = Vector_r::polar(halfWidth()/cosf(half), a1 + half - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
                 sink << rules::start;
-                sink << m1 + mo1 << make_join(c, opt_.halfWidth_, a1, a2, c + co)  << m2 + mo2
-                     << m2 - mo2 << make_join(c, opt_.halfWidth_, a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
+                sink << m1 + mo1 << make.left(c, halfWidth(), a1, a2, c + co)  << m2 + mo2
+                     << m2 - mo2 << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
                 sink << rules::close;
                 return true;
             }
 
         public:
-            Stroker() = default;
-
-            Stroker(real_t width)
-                : opt_(width*0.5f)
+            Stroker(SW const& rhs)
+                : make(rhs)
             {}
 
-            Stroker(decorators::Stroke const& rhs)
-                : opt_(rhs)
-            {}
-
-            Stroker(decorators::Stroke&& rhs)
-                : opt_(rhs)
+            Stroker(SW&& rhs)
+                : make(rhs)
             {}
 
             template<typename S>
@@ -241,57 +293,63 @@ namespace grace
                 }
                 return true;
             }
-
-
-            // for case we want to reuse buffers
-            Stroker& width(real_t w)
-            {
-                opt_.halfWidth_ = w/2;
-                return *this;
-            }
-
-            template<typename F>
-            Stroker& cap(F&& f)
-            {
-                opt_.cap_ = FWD(f);
-                return *this;
-            }
-
-            template<typename F>
-            Stroker& join(F&& f)
-            {
-                opt_.join_ = FWD(f);
-                return *this;
-            }
-
         private:
-            std::vector<Point_r> const& make_cap(Point_r const& endp, real_t hw, real_t dir)
-            {
-                return opt_.cap_(buffer_, endp, hw, dir);
+            SW  make;
+            real_t halfWidth() const {
+                return make.stroke.halfWidth_;
             }
-
-            std::vector<Point_r> const& make_join(Point_r const& cen, real_t hw, real_t dir1, real_t dir2, Point_r const& miter)
-            {
-                return opt_.join_(buffer_, cen, hw, dir1, dir2, miter);
-            }
-
-            decorators::Stroke         opt_;
-            std::vector<Point_r>       buffer_;
         };
     }
 
     namespace decorators
     {
-        template<typename Y>
-        auto operator/(rules::Yield<Y>&& y, Stroke const& s)
+        template<typename T>
+        auto operator/(T&& term, Stroke const& s)
         {
-            return FWD(y)._get_()/elements::Stroker(s);
+            return FWD(term)/elements::Stroker(elements::StrokeWrapper<Stroke>{s});
         }
 
-        template<typename Y>
-        auto operator/(rules::Yield<Y>&& y, Stroke&& s)
+        template<typename T>
+        auto operator/(T&& term, Stroke&& s)
         {
-            return FWD(y)._get_()/elements::Stroker(std::move(s));
+            return FWD(term)/elements::Stroker(elements::StrokeWrapper<Stroke>{std::move(s)});
+        }
+
+        template<typename T>
+        auto operator/(T&& term, FancyStroke const& s)
+        {
+            return FWD(term)/elements::Stroker(elements::StrokeWrapper<FancyStroke>{s});
+        }
+
+        template<typename T>
+        auto operator/(T&& term, FancyStroke&& s)
+        {
+            return FWD(term)/elements::Stroker(elements::StrokeWrapper<FancyStroke>{std::move(s)});
+        }
+
+
+        template<typename T>
+        auto operator/(Stroke const& s, T&& term)
+        {
+            return elements::Stroker(elements::StrokeWrapper<Stroke>{s})/FWD(term);
+        }
+
+        template<typename T>
+        auto operator/(Stroke&& s, T&& term)
+        {
+            return elements::Stroker(elements::StrokeWrapper<Stroke>{std::move(s)})/FWD(term);
+        }
+
+        template<typename T>
+        auto operator/(FancyStroke const& s, T&& term)
+        {
+            return elements::Stroker(elements::StrokeWrapper<FancyStroke>{s})/FWD(term);
+        }
+
+        template<typename T>
+        auto operator/(FancyStroke&& s, T&& term)
+        {
+            return elements::Stroker(elements::StrokeWrapper<FancyStroke>{std::move(s)})/FWD(term);
         }
     }
 

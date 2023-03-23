@@ -121,9 +121,9 @@ namespace grace
 
             struct ArrowHead
             {
-                ArrowHead(float length = 3.,
-                          float width = 3.,
-                          float sharpness = 2.,
+                ArrowHead(float length = 3.f,
+                          float width = 3.f,
+                          float sharpness = 2.f,
                           float extent = 0.f)
                     : length(length), width(width), sharpness(sharpness), extent(extent)
                 {}
@@ -148,11 +148,67 @@ namespace grace
                 }
             };
 
+            struct LArrowHead
+            {
+                LArrowHead(float length = 3.f,
+                    float width = 3.f,
+                    float sharpness = 1.f,
+                    float extent = 0.f)
+                    : length(length), width(width), sharpness(sharpness), extent(extent)
+                {}
+
+                float length = 3.f;
+                float width = 3.f;
+                float sharpness = 2.f;
+                float extent = 0.f;
+
+                inline std::vector<Point_r> const& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+                {
+                    buf.clear();
+                    Vector_r const e2 = Vector_r::polar(hw, dir + M_PI_2);
+                    Vector_r const e1 = {e2.y, -e2.x};
+                    Point_r const p = e + extent*e1;
+                    buf.push_back(p - e2);
+                    buf.push_back(p - width*e2 - sharpness*e1);
+                    buf.push_back(p + e2 + length*e1);
+                    return buf;
+                }
+            };
+
+            struct RArrowHead
+            {
+                RArrowHead(float length = 3.,
+                    float width = 3.,
+                    float sharpness = 1.f,
+                    float extent = 0.f)
+                    : length(length), width(width), sharpness(sharpness), extent(extent)
+                {}
+
+                float length = 3.f;
+                float width = 3.f;
+                float sharpness = 1.f;
+                float extent = 0.f;
+
+                inline std::vector<Point_r> const& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+                {
+                    buf.clear();
+                    Vector_r const e2 = Vector_r::polar(hw, dir + M_PI_2);
+                    Vector_r const e1 = {e2.y, -e2.x};
+                    Point_r const p = e + extent*e1;
+                    buf.push_back(p - e2 + length*e1);
+                    buf.push_back(p + width*e2 - sharpness*e1);
+                    buf.push_back(p + e2);
+                    return buf;
+                }
+            };
+
+
+
             struct ArrowTail
             {
-                ArrowTail(float length = 0.,
-                    float width = 1.,
-                    float sharpness = 1.,
+                ArrowTail(float length = 0.f,
+                    float width = 1.f,
+                    float sharpness = 1.f,
                     float extent = 0.f)
                     : length(length), width(width), sharpness(sharpness), extent(extent)
                 {}

@@ -108,6 +108,16 @@ namespace grace
                 return d;
             }
 
+            static real_t adjust_angle(real_t a, real_t a0)
+            {
+                real_t const d = a - a0;
+                if(d > M_PI)
+                    a -= 2*M_PI;
+                else if(d < -M_PI)
+                    a += 2*M_PI;
+                return a;
+            }
+
             void extend(Point_r const& s, Annot const& ann_s, Point_r& m, Point_r& e, Annot& ann_e, real_t const l)
             {
                 if(ann_e.distance >= l || ann_e.distance == 0.f)
@@ -140,9 +150,9 @@ namespace grace
                 auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
                 extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
 
-                auto const a2 = b.annot.back(0).direction;
                 auto const a1 = b.annot.back(1).direction;
-                auto const half = 0.5f*diff_angle(a2, a1);
+                auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
+                auto const half = 0.5f*(a2 - a1);
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
@@ -163,9 +173,10 @@ namespace grace
                 auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
                 extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
 
-                auto const a2 = b.annot.back(0).direction;
                 auto const a1 = b.annot.back(1).direction;
-                auto const half = 0.5f*diff_angle(a2, a1);
+                auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
+                auto const half = 0.5f*(a2 - a1);
+
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
@@ -186,9 +197,10 @@ namespace grace
                     extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
                 else
                     extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
-                auto const a2 = b.annot.back(0).direction;
                 auto const a1 = b.annot.back(1).direction;
-                auto const half = 0.5f*diff_angle(a2, a1);
+                auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
+                auto const half = 0.5f*(a2 - a1);
+
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
@@ -217,9 +229,10 @@ namespace grace
             template<typename S>
             bool feed_joint(S& sink, Buffer const& b)
             {
-                auto const a2 = b.annot.back(0).direction;
                 auto const a1 = b.annot.back(1).direction;
+                auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
                 auto const half = 0.5f*(a2 - a1);
+
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
@@ -227,8 +240,10 @@ namespace grace
                 Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
                 Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
                 sink << rules::start;
-                sink << m1 + mo1 << make.left(c, halfWidth(), a1, a2, c + co)  << m2 + mo2
-                     << m2 - mo2 << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co)  << m1 - mo1;
+                sink << m1 - mo1 << m1 + mo1;
+                sink << make.left(c, halfWidth(), a1, a2, c + co);
+                sink << m2 + mo2 << m2 - mo2;
+                sink << make.right(c, halfWidth(), a2+M_PI, a1+M_PI, c - co);
                 sink << rules::close;
                 return true;
             }
@@ -250,7 +265,7 @@ namespace grace
                 if(p.size() < 2)
                     return true;
 
-                bool const closed = dot(p.front() - p.back()) < 1.e-20f;
+                bool const closed = dot(p.front() - p.back()) < 1.e-2f;
                 Buffer b;
                 if(p.size() == 2)
                 {
@@ -260,11 +275,10 @@ namespace grace
                     return feed_short(sink, b);;
                 }
 
-
                 size_t i = 1;
                 if(closed)
                 {
-                    b.initialize(p[p.size()-2], p[0]);
+                    b.initialize(p[p.size()-2], p[p.size()-1]);
                     b.push_back(p[1]);
                     feed_joint(sink, b);
                     while(++i < p.size())

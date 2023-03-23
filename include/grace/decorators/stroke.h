@@ -202,7 +202,49 @@ namespace grace
                 }
             };
 
+            struct Skew
+            {
+                Skew(float left = 0.f,
+                     float right = 0.f)
+                    : left(left), right(right)
+                {}
 
+                float left  = 0.f;
+                float right = 0.f;
+
+                inline std::vector<Point_r> const& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+                {
+                    buf.clear();
+                    Vector_r const e2 = Vector_r::polar(hw, dir + M_PI_2);
+                    Vector_r const e1 = {e2.y, -e2.x};
+                    buf.push_back(e - e2 + left*e1);
+                    buf.push_back(e + e2 + right*e1);
+                    return buf;
+                }
+            };
+
+            struct FlatArrowTail
+            {
+                FlatArrowTail(float length = 2.f,
+                    float extent = 0.f)
+                    : length(length), extent(extent)
+                {}
+
+                float length = 2.f;
+                float extent = 0.f;
+
+                inline std::vector<Point_r> const& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
+                {
+                    buf.clear();
+                    Vector_r const e2 = Vector_r::polar(hw, dir + M_PI_2);
+                    Vector_r const e1 = {e2.y, -e2.x};
+                    Point_r const p = e + extent*e1;
+                    buf.push_back(p - e2 + length*e1);
+                    buf.push_back(p);
+                    buf.push_back(p + e2 + length*e1);
+                    return buf;
+                }
+            };
 
             struct ArrowTail
             {
@@ -261,8 +303,8 @@ namespace grace
             }
 
             real_t                            halfWidth_ = 1.0f;
-            std::function<caps::cap_func_t>   cap_ = caps::Polygonal{4};
-            std::function<joins::join_func_t> join_ = joins::Polygonal{3};
+            std::function<caps::cap_func_t>   cap_  = caps::butt;
+            std::function<joins::join_func_t> join_ = joins::miter;
         };
 
         class FancyStroke
@@ -322,10 +364,10 @@ namespace grace
             }
 
             real_t                            halfWidth_ = 1.0f;
-            std::function<caps::cap_func_t>   head_      = caps::Polygonal{4};
-            std::function<caps::cap_func_t>   tail_      = caps::Polygonal{4};
-            std::function<joins::join_func_t> left_      = joins::Polygonal{3};
-            std::function<joins::join_func_t> right_     = joins::Polygonal{3};
+            std::function<caps::cap_func_t>   head_      = caps::butt;
+            std::function<caps::cap_func_t>   tail_      = caps::butt;
+            std::function<joins::join_func_t> left_      = joins::miter;
+            std::function<joins::join_func_t> right_     = joins::miter;
         };
     }
 }

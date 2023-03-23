@@ -178,8 +178,7 @@ namespace grace
             };
         }
 
-
-        class Stroke: rules::Decorator<Stroke>
+        class Stroke
         {
         public:
             Stroke() = default;
@@ -208,6 +207,69 @@ namespace grace
             real_t                            halfWidth_ = 1.0f;
             std::function<caps::cap_func_t>   cap_ = caps::Polygonal{4};
             std::function<joins::join_func_t> join_ = joins::Polygonal{3};
+        };
+
+        class FancyStroke
+        {
+        public:
+            FancyStroke() = default;
+            FancyStroke(real_t width): halfWidth_(width/2) {}
+
+            FancyStroke& width(real_t w)
+            {
+                halfWidth_ = w*0.5f;
+                return *this;
+            }
+
+            template<typename F>
+            FancyStroke& cap(F&& f)
+            {
+                head_ = FWD(f);
+                tail_ = FWD(f);
+                return *this;
+            }
+
+            template<typename F>
+            FancyStroke& head(F&& f)
+            {
+                head_ = FWD(f);
+                return *this;
+            }
+
+            template<typename F>
+            FancyStroke& tail(F&& f)
+            {
+                tail_ = FWD(f);
+                return *this;
+            }
+
+            template<typename F>
+            FancyStroke& join(F&& f)
+            {
+                left_  = FWD(f);
+                right_ = FWD(f);
+                return *this;
+            }
+
+            template<typename F>
+            FancyStroke& left(F&& f)
+            {
+                left_ = FWD(f);
+                return *this;
+            }
+
+            template<typename F>
+            FancyStroke& right(F&& f)
+            {
+                right_ = FWD(f);
+                return *this;
+            }
+
+            real_t                            halfWidth_ = 1.0f;
+            std::function<caps::cap_func_t>   head_      = caps::Polygonal{4};
+            std::function<caps::cap_func_t>   tail_      = caps::Polygonal{4};
+            std::function<joins::join_func_t> left_      = joins::Polygonal{3};
+            std::function<joins::join_func_t> right_     = joins::Polygonal{3};
         };
     }
 }

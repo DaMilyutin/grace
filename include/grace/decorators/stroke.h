@@ -158,15 +158,15 @@ namespace grace
             struct LArrowHead
             {
                 LArrowHead(float length = 3.f,
-                    float width = 3.f,
-                    float sharpness = 1.f,
+                    float width = 2.f,
+                    float sharpness = 0.5f,
                     float extent = 0.f)
                     : length(length), width(width), sharpness(sharpness), extent(extent)
                 {}
 
-                float length = 3.f;
-                float width = 3.f;
-                float sharpness = 2.f;
+                float length = 2.f;
+                float width = 2.f;
+                float sharpness = 0.5f;
                 float extent = 0.f;
 
                 inline std::vector<Point_r> const& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)
@@ -184,16 +184,16 @@ namespace grace
 
             struct RArrowHead
             {
-                RArrowHead(float length = 3.,
-                    float width = 3.,
-                    float sharpness = 1.f,
+                RArrowHead(float length = 3.f,
+                    float width = 2.f,
+                    float sharpness = 0.5f,
                     float extent = 0.f)
                     : length(length), width(width), sharpness(sharpness), extent(extent)
                 {}
 
-                float length = 3.f;
-                float width = 3.f;
-                float sharpness = 1.f;
+                float length = 2.f;
+                float width = 2.f;
+                float sharpness = 0.5f;
                 float extent = 0.f;
 
                 inline std::vector<Point_r> const& operator()(std::vector<Point_r>& buf, Point_r const& e, real_t hw, real_t dir)

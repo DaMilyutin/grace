@@ -3,6 +3,6 @@
 
 #include <grace/decorators/dash.h>
 
-#include <grace/decorators/extrudes.h>
+#include <grace/decorators/stroke.h>
 #include <grace/decorators/joins.h>
 #include <grace/decorators/caps.h>

@@ -101,20 +101,20 @@ namespace grace
             static real_t diff_angle(real_t a2, real_t a1)
             {
                 real_t d = a2 - a1;
-                if(d > 2*M_PI)
-                    d -= 2*M_PI;
-                if(d < -2*M_PI)
-                    d += 2*M_PI;
+                if(d > 2*pi)
+                    d -= 2*pi;
+                if(d < -2*pi)
+                    d += 2*pi;
                 return d;
             }
 
             static real_t adjust_angle(real_t a, real_t a0)
             {
                 real_t const d = a - a0;
-                if(d > M_PI)
-                    a -= 2*M_PI;
-                else if(d < -M_PI)
-                    a += 2*M_PI;
+                if(d > pi)
+                    a -= 2*pi;
+                else if(d < -pi)
+                    a += 2*pi;
                 return a;
             }
 
@@ -139,8 +139,8 @@ namespace grace
 
             real_t get_lim(real_t a) const
             {
-                if(a >  2*M_PI) a -= 2*M_PI;
-                if(a < -2*M_PI) a += 2*M_PI;
+                if(a >  2*pi) a -= 2*pi;
+                if(a < -2*pi) a += 2*pi;
                 return fabs(halfWidth()*tan(a));
             }
 
@@ -155,12 +155,12 @@ namespace grace
                 auto const& m1 = b.point.back(2);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
+                Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - pi_2);
                 sink << rules::start;
-                sink << make.tail(m1, halfWidth(), a1 + M_PI)
+                sink << make.tail(m1, halfWidth(), a1 + pi)
                      << make.left(c, halfWidth(), a1, a2)
                      << m2 + mo2 << m2 - mo2
-                     << make.right(c, halfWidth(), a2 + M_PI, a1 + M_PI);
+                     << make.right(c, halfWidth(), a2 + pi, a1 + pi);
                 sink << rules::close;
                 return true;
             }
@@ -177,10 +177,10 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
-                Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - pi_2);
                 sink << rules::start;
                 sink << m1 - mo1 << m1 + mo1 << make.left(c, halfWidth(), a1, a2)
-                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI);
+                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+pi, a1+pi);
                 sink << rules::close;
                 return true;
             }
@@ -200,8 +200,8 @@ namespace grace
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 sink << rules::start;
-                sink << make.tail(m1, halfWidth(), a1 + M_PI) << make.left(c, halfWidth(), a1, a2)
-                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+M_PI, a1+M_PI);
+                sink << make.tail(m1, halfWidth(), a1 + pi) << make.left(c, halfWidth(), a1, a2)
+                     << make.head(m2, halfWidth(), a2) << make.right(c, halfWidth(), a2+pi, a1+pi);
                 sink << rules::close;
                 return true;
             }
@@ -213,7 +213,7 @@ namespace grace
                 auto const& m1 = b.point.back(1);
                 auto const& m2 = b.point.back(0);
                 sink << rules::start;
-                sink << make.tail(m1, halfWidth(), a + M_PI)
+                sink << make.tail(m1, halfWidth(), a + pi)
                      << make.head(m2, halfWidth(), a);
                 sink << rules::close;
                 return true;
@@ -229,13 +229,13 @@ namespace grace
                 auto const& m1 = b.mid.back(1);
                 auto const& c = b.point.back(1);
                 auto const& m2 = b.mid.back(0);
-                Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - M_PI_2);
-                Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - M_PI_2);
+                Vector_r const mo1 = Vector_r::polar(halfWidth(), a1 - pi_2);
+                Vector_r const mo2 = Vector_r::polar(halfWidth(), a2 - pi_2);
                 sink << rules::start;
                 sink << m1 - mo1 << m1 + mo1;
                 sink << make.left(c, halfWidth(), a1, a2);
                 sink << m2 + mo2 << m2 - mo2;
-                sink << make.right(c, halfWidth(), a2+M_PI, a1+M_PI);
+                sink << make.right(c, halfWidth(), a2+pi, a1+pi);
                 sink << rules::close;
                 return true;
             }

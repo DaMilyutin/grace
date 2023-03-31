@@ -9,4 +9,5 @@
 #include "algorithms/segmentation.h"
 #include "algorithms/dasher.h"
 #include "algorithms/stroker.h"
+#include "algorithms/shifter.h"
 

@@ -29,5 +29,28 @@ namespace grace
                     && the_sink.consume(buffer.back(0) + o);
             }
         };
+
+        class Shift
+        {
+        public:
+            Shift() = default;
+            Shift(real_t w): offset_(w/2) {}
+
+            Shift& offset(real_t w)
+            {
+                offset_ = w;
+                return *this;
+            }
+
+            template<typename F>
+            Shift& join(F&& f)
+            {
+                join_ = FWD(f);
+                return *this;
+            }
+
+            real_t                            offset_ = 0.0f;
+            std::function<joins::join_func_t> join_ = joins::miter;
+        };
     }
 }

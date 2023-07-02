@@ -41,8 +41,9 @@ target_include_directories(grace INTERFACE ./include/.)
 if (NOT TARGET ylems)
     option(YLEMS_NO_TESTS "No tests for ylems" ON)
     add_subdirectory(libraries/ylems)
-	target_link_libraries(grace INTERFACE ylems)
 endif()
+
+target_link_libraries(grace INTERFACE ylems)
 
 
 

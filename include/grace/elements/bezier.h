@@ -24,8 +24,8 @@ namespace grace
 
             P operator()(real_t t) const
             {
-                const real_t _1_t = 1.0f - t;
-                const real_t c[] = {_1_t * _1_t , 2.0f * t * _1_t , t * t};
+                const real_t s = 1.0f - t;
+                const real_t c[] = {s * s , 2.0f * t * s , t * t};
                 P ret;
                 ret.x = _b.x * c[0] + _c.x * c[1] + _e.x * c[2];
                 ret.y = _b.y * c[0] + _c.y * c[1] + _e.y * c[2];
@@ -47,9 +47,9 @@ namespace grace
 
             P operator()(real_t t) const
             {
-                const real_t _1_t = 1.0f - t;
-                const real_t tm = 3.0f * t * _1_t;
-                const real_t c[] = {_1_t * _1_t * _1_t, tm * _1_t, tm * t, t * t * t,};
+                const real_t s  = 1.0f - t;
+                const real_t tm = 3.0f * t * s;
+                const real_t c[] = {s * s * s, tm * s, tm * t, t * t * t,};
                 P ret;
                 ret.x = _b.x * c[0] + _c1.x * c[1] + _c2.x * c[2] + _e.x * c[3];
                 ret.y = _b.y * c[0] + _c1.y * c[1] + _c2.y * c[2] + _e.y * c[3];

@@ -250,7 +250,19 @@ namespace grace
             {}
 
             template<typename S>
+            bool feed(S& sink, Point_r const& p)
+            {
+                return false;
+            }
+
+            template<typename S>
             bool feed(S& sink, std::vector<Point_r> const& p)
+            {
+                return transfuse(p, sink);
+            }
+
+            template<typename S>
+            bool transfuse(std::vector<Point_r> const& p, S& sink)
             {
                 static int dbg = 0;
                 ++dbg;
@@ -305,6 +317,13 @@ namespace grace
                 return make.stroke.halfWidth_;
             }
         };
+
+
+        template<typename V, typename W, typename Sink>
+        auto transfuse(V const& points, grace::rules::LinkSink<grace::elements::Stroker<W>, Sink>& ls)
+        {
+            return ls.link.transfuse(points, ls.sink);
+        };
     }
 
     namespace decorators
@@ -358,6 +377,5 @@ namespace grace
             return elements::Stroker(elements::StrokeWrapper<FancyStroke>{std::move(s)})/FWD(term);
         }
     }
-
 
 }

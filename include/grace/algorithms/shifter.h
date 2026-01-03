@@ -147,6 +147,18 @@ namespace grace
             template<typename S>
             bool feed(S& sink, std::vector<Point_r> const& p)
             {
+                return transfuse(p, sink);
+            }
+
+            template<typename S>
+            bool feed(S&, Point_r const&)
+            {
+                return false;
+            }
+
+            template<typename S>
+            bool tranfuse(std::vector<Point_r> const& p, S& sink)
+            {
                 static int dbg = 0;
                 ++dbg;
                 if(p.size() < 2)
@@ -230,6 +242,15 @@ namespace grace
         }
 
     }
+}
 
-
+namespace ylems::rules
+{
+    template<typename Y, typename SW, typename Sink>
+    bool transfuse(Y&& y, grace::rules::LinkSink<grace::elements::Shifter<SW>, Sink>&& ls)
+    {
+        auto&& l = FWD(ls).link;
+        auto&& s = FWD(ls).sink;
+        FWD(l).transfuse(FWD(y), FWD(s));
+    }
 }

@@ -63,41 +63,41 @@ namespace grace
             std::vector<Point_r>      buffer;
         };
 
-        template<typename SW>
-        class Stroker: public rules::Link<Stroker<SW>>
+        struct StrokeBuffer
         {
             using Annot = grace::annotations::United_DD;
 
-            struct Buffer
+            void initialize(Point_r p1, Point_r p2)
             {
-                void initialize(Point_r p1, Point_r p2)
-                {
-                    point.push_back(p1);
-                    point.push_back(p2);
-                    push_annot();
-                }
+                point.push_back(p1);
+                point.push_back(p2);
+                push_annot();
+            }
 
-                void push_back(Point_r p)
-                {
-                    point.push_back(p);
-                    push_annot();
-                }
+            void push_back(Point_r p)
+            {
+                point.push_back(p);
+                push_annot();
+            }
 
-                void push_annot()
-                {
-                    assert(point.size()>=2);
-                    auto const& p1 = point.back(1);
-                    auto const& p2 = point.back(0);
-                    auto dirV = p2 - p1;
-                    mid.push_back(p1 + 0.5f*dirV);
-                    annot.push_back(grace::annotations::United_DD(dirV));
-                }
+            void push_annot()
+            {
+                assert(point.size() >= 2);
+                auto const& p1 = point.back(1);
+                auto const& p2 = point.back(0);
+                auto dirV = p2 - p1;
+                mid.push_back(p1 + 0.5f * dirV);
+                annot.push_back(grace::annotations::United_DD(dirV));
+            }
 
-                ylems::elements::CycleBuffer<Annot, 2>    annot;
-                ylems::elements::CycleBuffer<Point_r, 2>  mid;
-                ylems::elements::CycleBuffer<Point_r, 3>  point;
-            };
+            ylems::elements::CycleBuffer<Annot, 2>    annot;
+            ylems::elements::CycleBuffer<Point_r, 2>  mid;
+            ylems::elements::CycleBuffer<Point_r, 3>  point;
+        };
 
+        template<typename SW>
+        class Stroker: public rules::Link<Stroker<SW>>
+        {
             static real_t diff_angle(real_t a2, real_t a1)
             {
                 real_t d = a2 - a1;
@@ -118,7 +118,7 @@ namespace grace
                 return a;
             }
 
-            void extend(Point_r const& s, Annot const& ann_s, Point_r& m, Point_r& e, Annot& ann_e, real_t const l)
+            void extend(Point_r const& s, StrokeBuffer::Annot const& ann_s, Point_r& m, Point_r& e, StrokeBuffer::Annot& ann_e, real_t const l)
             {
                 if(ann_e.distance >= l || ann_e.distance == 0.f)
                     return;
@@ -145,7 +145,7 @@ namespace grace
             }
 
             template<typename S>
-            bool feed_start(S& sink, Buffer& b)
+            bool feed_start(S& sink, StrokeBuffer& b)
             {
                 auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
                 extend(b.point.back(1), b.annot.back(0), b.mid.back(1), b.point.back(2), b.annot.back(1), lim);
@@ -166,7 +166,7 @@ namespace grace
             }
 
             template<typename S>
-            bool feed_end(S& sink, Buffer& b)
+            bool feed_end(S& sink, StrokeBuffer& b)
             {
                 auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
                 extend(b.point.back(1), b.annot.back(1), b.mid.back(0), b.point.back(0), b.annot.back(0), lim);
@@ -186,7 +186,7 @@ namespace grace
             }
 
             template<typename S>
-            bool feed_full(S& sink, Buffer& b)
+            bool feed_full(S& sink, StrokeBuffer& b)
             {
                 auto const lim = get_lim(0.5f*(b.annot.back(0).direction - b.annot.back(1).direction));
                 if(b.annot.back(1).distance < b.annot.back(0).distance)
@@ -207,7 +207,7 @@ namespace grace
             }
 
             template<typename S>
-            bool feed_short(S& sink, Buffer& b)
+            bool feed_short(S& sink, StrokeBuffer& b)
             {
                 auto const a = b.annot.back(0).direction;
                 auto const& m1 = b.point.back(1);
@@ -221,7 +221,7 @@ namespace grace
 
 
             template<typename S>
-            bool feed_joint(S& sink, Buffer const& b)
+            bool feed_joint(S& sink, StrokeBuffer const& b)
             {
                 auto const a1 = b.annot.back(1).direction;
                 auto const a2 = adjust_angle(b.annot.back(0).direction, a1);
@@ -270,7 +270,7 @@ namespace grace
                     return true;
 
                 bool const closed = dot(p.front() - p.back()) < 1.e-2f;
-                Buffer b;
+                StrokeBuffer b;
                 if(p.size() == 2)
                 {
                     if(closed)
